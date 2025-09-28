@@ -1,86 +1,28 @@
-name: Deploy Static Site
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  validate-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: List project structure
-      run: |
-        echo "Project structure:"
-        find . -type f -name "*.html" -o -name "*.css" -o -name "*.js" | head -20
-
-    - name: Basic HTML validation
-      run: |
-        # Check for basic HTML syntax
-        for file in $(find . -name "*.html" -type f); do
-          echo "Checking $file"
-          if grep -q "<html" "$file" && grep -q "<\/html>" "$file"; then
-            echo "✓ $file has basic HTML structure"
-          else
-            echo "⚠ $file might be missing basic HTML structure"
-          fi
-        done
-
-    - name: Check for broken links in HTML
-      run: |
-        # Simple check for common issues
-        for file in $(find . -name "*.html" -type f); do
-          echo "Checking links in $file"
-          # Check for common file references
-          if grep -E '(src|href)="[^"]*\.(css|js|jpg|png|gif)"' "$file" | grep -v "http"; then
-            echo "Found local file references in $file"
-          fi
-        done
-
-    - name: Validate CSS files
-      run: |
-        for file in $(find . -name "*.css" -type f); do
-          echo "Found CSS file: $file"
-          # Check if CSS file has content
-          if [ -s "$file" ]; then
-            echo "✓ $file has content"
-          else
-            echo "⚠ $file might be empty"
-          fi
-        done
-
-    - name: Validate JavaScript files
-      run: |
-        for file in $(find . -name "*.js" -type f); do
-          echo "Found JS file: $file"
-          # Basic syntax check using node (lightweight)
-          if command -v node >/dev/null 2>&1; then
-            if node -c "$file" 2>/dev/null; then
-              echo "✓ $file has valid JavaScript syntax"
-            else
-              echo "⚠ $file might have JavaScript syntax errors"
-            fi
-          fi
-        done
-
-    - name: Create deployment package
-      run: |
-        # Create a clean deployment directory (optional)
-        mkdir -p deploy
-        # Copy all files except .github and node_modules
-        find . -type f -not -path "./.git/*" -not -path "./.github/*" -not -path "./deploy/*" -exec cp --parents {} deploy/ \; 2>/dev/null || true
-        echo "Deployment package created"
-
-    - name: Deploy to GitHub Pages
-      if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./
-        # Or use the cleaned deploy directory:
-        # publish_dir: ./deploy
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v3
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: ./
+      
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v2
