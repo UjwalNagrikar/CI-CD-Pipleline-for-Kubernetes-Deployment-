@@ -1,0 +1,23 @@
+name: Deploy Static Website
+
+on:
+  push:
+    branches:
+      - main  # Trigger on changes to the main branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Step 2: Deploy to GitHub Pages (copy files directly)
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages  # The branch to deploy to (gh-pages is the default branch for GitHub Pages)
+          folder: .  # Deploy the root folder (if your HTML files are in the root directory)
+          
